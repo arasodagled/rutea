@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -49,8 +49,10 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Global loading indicator */}
-      <LoadingIndicator />
+      {/* Global loading indicator wrapped in Suspense */}
+      <Suspense fallback={null}>
+        <LoadingIndicator />
+      </Suspense>
       
       {/* Main layout container */}
       <div className="flex h-screen">

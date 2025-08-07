@@ -1,11 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
+
+// Parent component that provides Suspense boundary
+export default function ConfirmPasswordResetPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              Loading...
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Please wait while we process your request.
+            </p>
+          </div>
+        </div>
+      </div>
+    }>
+      <ConfirmPasswordResetContent />
+    </Suspense>
+  )
+}
+
+// Child component that uses useSearchParams
+import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Eye, EyeOff } from 'lucide-react'
 
-export default function ConfirmPasswordReset() {
+function ConfirmPasswordResetContent() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
