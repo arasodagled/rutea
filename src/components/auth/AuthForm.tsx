@@ -116,7 +116,7 @@ export function AuthForm() {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle className="text-2xl">{isLogin ? 'Login' : 'Sign Up'}</CardTitle>
+        <CardTitle className="text-2xl">{isLogin ? "Login" : "Sign Up"}</CardTitle>
         <CardDescription>
           {isLogin ? 'Enter your email below to login to your account.' : 'Enter your email below to create an account.'}
         </CardDescription>

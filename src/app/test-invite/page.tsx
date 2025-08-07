@@ -94,9 +94,9 @@ export default function TestInvitePage() {
                   {JSON.stringify(authResult, null, 2)}
                 </pre>
                 <div className="mt-2 p-3 rounded-md bg-blue-50">
-                  <p><strong>Status:</strong> {authResult.user ? 'Logged In' : 'Not Logged In'}</p>
-                  <p><strong>Admin:</strong> {authResult.isAdmin ? 'Yes' : 'No'}</p>
-                  <p><strong>User Type:</strong> {authResult.profile?.user_type || 'N/A'}</p>
+                  <p><strong>Status:</strong> {authResult.user ? "Logged In" : "Not Logged In"}</p>
+                  <p><strong>Admin:</strong> {authResult.isAdmin ? "Yes" : "No"}</p>
+                  <p><strong>User Type:</strong> {authResult.profile?.user_type || "N/A"}</p>
                 </div>
               </div>
             )}
@@ -153,7 +153,7 @@ export default function TestInvitePage() {
                   inviteResult.status === 200 ? 'bg-green-50' : 'bg-red-50'
                 }`}>
                   <p><strong>Status Code:</strong> {inviteResult.status}</p>
-                  <p><strong>Success:</strong> {inviteResult.status === 200 ? 'Yes' : 'No'}</p>
+                  <p><strong>Success:</strong> {inviteResult.status === 200 ? "Yes" : "No"}</p>
                 </div>
                 <pre className="bg-gray-100 p-4 rounded-md text-sm overflow-auto max-h-64 mt-2">
                   {JSON.stringify(inviteResult.data, null, 2)}
@@ -165,10 +165,9 @@ export default function TestInvitePage() {
           <div className="mt-6 p-4 bg-yellow-50 rounded-md">
             <h4 className="font-semibold text-yellow-900 mb-2">Troubleshooting:</h4>
             <ul className="list-disc list-inside text-yellow-800 space-y-1">
-              <li>If auth shows you're not admin, the database user_type field might not be 'admin'</li>
-              <li>If auth shows no user, you might need to log in again</li>
-              <li>If invite fails with 401, there's a session/cookie issue</li>
-              <li>If invite fails with 403, your user_type is not 'admin' in the database</li>
+              <li>If auth shows you&apos;re not admin, the database user_type field might not be &apos;admin&apos;</li>
+              <li>If invite fails with 401, there&apos;s a session/cookie issue</li>
+              <li>If invite fails with 403, your user_type is not &apos;admin&apos; in the database</li>
             </ul>
           </div>
         </CardContent>

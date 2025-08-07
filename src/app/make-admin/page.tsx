@@ -90,7 +90,7 @@ export default function MakeAdminPage() {
             <h4 className="font-semibold text-blue-900 mb-2">Instructions:</h4>
             <ol className="list-decimal list-inside text-blue-800 space-y-1">
               <li>First, click "Check Auth Status" to see your current authentication state</li>
-              <li>If you're logged in but not an admin, click "Make Me Admin"</li>
+              <li>If you&apos;re logged in but not an admin, click "Make Me Admin"</li>
               <li>After becoming admin, you should be able to invite users</li>
               <li>If you still have issues, try logging out and logging back in</li>
             </ol>

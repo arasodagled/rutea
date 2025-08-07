@@ -266,7 +266,7 @@ export function MapaDeRutaComponent({ userId }: MapaDeRutaComponentProps) {
                       <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          <span>Vence {isClient ? format(new Date(item.due_date), 'dd MMM yyyy', { locale: es }) : 'Cargando...'}</span>
+                          <span>Vence {isClient ? format(new Date(item.due_date), 'dd MMM yyyy', { locale: es }) : "Cargando..."}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span>Progreso:</span>

@@ -18,7 +18,7 @@ interface Resumen {
   experiencia_destacada: string;
   claridad_actual: string;
   cambio_carrera: string;
-  vision_1_ano: any;
+  vision_1_ano: string | Record<string, unknown>; // Replace 'any' with a more specific type based on what this field actually contains
   impacto_ejercicio: string;
   created_at: string;
   updated_at: string;
@@ -168,7 +168,7 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <Calendar className="h-4 w-4" />
-            <span>Completado {isClient ? format(new Date(resumen.created_at), 'dd MMM yyyy', { locale: es }) : 'Cargando...'}</span>
+            <span>Completado {isClient ? format(new Date(resumen.created_at), 'dd MMM yyyy', { locale: es }) : "Cargando..."}</span>
           </div>
           <Button
             onClick={regenerateResumen}

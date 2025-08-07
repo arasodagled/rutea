@@ -56,15 +56,8 @@ export default function ConfirmPasswordReset() {
           return;
         }
         
-        // Check if verification created a session
-        const { data: { session: newSession } } = await supabase.auth.getSession();
-        if (newSession) {
-          console.log('New session created after token verification');
-          setIsReady(true);
-        } else {
-          console.error('No session created after successful token verification');
-          setMessage('Unable to establish session. Please try again or request a new link.');
-        }
+        // Token verification succeeded, we should now have a session
+        setIsReady(true);
       } catch (error) {
         console.error('Error during password reset flow:', error);
         setMessage('An unexpected error occurred. Please try again.');
