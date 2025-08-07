@@ -51,7 +51,7 @@ export default function ConfirmPasswordReset() {
         
         if (error) {
           console.error('Token verification failed:', error.message);
-          setMessage('Invalid or expired reset link. Please request a new one.');
+          setMessage('Parámetros de recuperación inválidos o faltantes');
           setIsChecking(false);
           return;
         }
@@ -60,7 +60,8 @@ export default function ConfirmPasswordReset() {
         setIsReady(true);
       } catch (error) {
         console.error('Error during password reset flow:', error);
-        setMessage('An unexpected error occurred. Please try again.');
+        setMessage('Enlace de restablecimiento inválido o expirado. Por favor solicita uno nuevo.');
+        setMessage('Ocurrió un error inesperado. Por favor intenta de nuevo.');
       } finally {
         setIsChecking(false);
       }
@@ -88,7 +89,7 @@ export default function ConfirmPasswordReset() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
-        setMessage(`Error updating password: ${error.message}`);
+        setMessage(`Error al actualizar la contraseña: ${error.message}`);
       } else {
         setMessage('✅ Password updated successfully! Redirecting to login...');
         setTimeout(() => {

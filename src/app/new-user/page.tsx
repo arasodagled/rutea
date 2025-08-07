@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,21 @@ interface FormData {
   cvFile: File | null;
 }
 
+// Main component that wraps the content in Suspense
 export default function NewUserPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    }>
+      <NewUserContent />
+    </Suspense>
+  );
+}
+
+// Component with the actual content
+function NewUserContent() {
   const [formData, setFormData] = useState<FormData>({
     linkedinUrl: '',
     cvFile: null

@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { Menu, X, Users, Brain, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface SidebarProps {
   onMobileMenuToggle: () => void;
 }
 
-export function Sidebar({ isOpen, onToggle, onMobileMenuToggle }: SidebarProps) {
+export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -153,7 +154,7 @@ export function Sidebar({ isOpen, onToggle, onMobileMenuToggle }: SidebarProps) 
         {/* Sidebar header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <Link href="/" onClick={onToggle} data-nav="true">
-            <img src="/images/rutea-logo-color.svg" alt="Rutea" className="h-8" />
+            <Image src="/images/rutea-logo-color.svg" alt="Rutea" width={96} height={32} className="h-8 w-auto" />
           </Link>
           <Button
             variant="ghost"

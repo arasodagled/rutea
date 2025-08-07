@@ -9,35 +9,30 @@ export default function AuthCodeErrorPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-red-600">Authentication Error</CardTitle>
+          <CardTitle className="text-2xl text-red-600">Error de Autenticación</CardTitle>
           <CardDescription>
-            There was an error processing your email verification.
+            Hubo un error al procesar tu verificación de correo electrónico.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            This could happen if:
-          </p>
-          <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
-            <li><strong>The verification link has expired</strong> (links expire after 1 hour)</li>
-            <li>The link has already been used</li>
-            <li>There was a network error</li>
+          <p className="mb-2 font-medium">Esto podría suceder si:</p>
+          <ul className="list-disc pl-5 space-y-1 mb-4">
+            <li>El enlace de verificación ha expirado</li>
+            <li>El enlace ya ha sido utilizado</li>
+            <li>Hubo un error de red</li>
           </ul>
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md mb-4">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              <strong>Most common issue:</strong> Email verification links expire after 1 hour. 
-              If you waited too long to click the link, you'll need to request a new one.
-            </p>
-          </div>
+          <p className="mb-4">
+            Problema más común: Los enlaces de verificación de correo electrónico expiran después de 1 hora. Si esperaste demasiado para hacer clic en el enlace, necesitarás solicitar uno nuevo.
+          </p>
           <div className="flex flex-col space-y-2">
             <Link href="/login">
               <Button className="w-full">
-                Go to Login/Signup Page
+                Ir a Iniciar Sesión/Registrarse
               </Button>
+              <p className="text-sm text-center mt-2">
+                En el formulario de registro, puedes solicitar un nuevo correo de verificación
+              </p>
             </Link>
-            <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-              On the signup form, you can request a new verification email
-            </p>
           </div>
         </CardContent>
       </Card>

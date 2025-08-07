@@ -248,7 +248,7 @@ No agregues texto adicional, solo el JSON.
       },
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
+
     console.error('Error in POST handler:', error);
     return new Response('Internal server error', { status: 500 });
   }

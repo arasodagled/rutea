@@ -19,10 +19,10 @@ export default function UsersPage() {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">User Management</h1>
+        <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
         <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Invite New User
+          Invitar Nuevo Usuario
         </Button>
       </div>
       

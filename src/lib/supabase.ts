@@ -11,6 +11,6 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     detectSessionInUrl: true,
     persistSession: true,
-    debug: true,  // Enable verbose logs for debugging
+    debug: false,  // Disable verbose logs for production
   }
 });

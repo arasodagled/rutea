@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { Eye, Mail, Calendar, User } from 'lucide-react'
 import Link from 'next/link'
@@ -38,25 +38,25 @@ interface UsersResponse {
 
 const statusConfig = {
   pending: {
-    title: 'Pending',
+    title: 'Pendiente',
     color: 'bg-yellow-50 border-yellow-200',
     headerColor: 'bg-yellow-100 text-yellow-800',
     badgeVariant: 'secondary' as const
   },
   active: {
-    title: 'Active',
+    title: 'Activo',
     color: 'bg-green-50 border-green-200',
     headerColor: 'bg-green-100 text-green-800',
     badgeVariant: 'default' as const
   },
   inactive: {
-    title: 'Inactive',
+    title: 'Inactivo',
     color: 'bg-gray-50 border-gray-200',
     headerColor: 'bg-gray-100 text-gray-800',
     badgeVariant: 'outline' as const
   },
   completed: {
-    title: 'Completed',
+    title: 'Completado',
     color: 'bg-blue-50 border-blue-200',
     headerColor: 'bg-blue-100 text-blue-800',
     badgeVariant: 'default' as const
@@ -138,7 +138,7 @@ export default function UserKanbanBoard() {
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading users...</p>
+          <p className="text-gray-600">Cargando usuarios...</p>
         </div>
       </div>
     )
@@ -155,7 +155,7 @@ export default function UserKanbanBoard() {
               variant="outline" 
               className="ml-4"
             >
-              Retry
+              Reintentar
             </Button>
           </div>
         </CardContent>
@@ -170,7 +170,7 @@ export default function UserKanbanBoard() {
         <Card className="h-16">
           <CardContent className="px-4 py-2 h-full flex items-center">
             <div>
-              <p className="text-xs font-medium text-gray-600">Total Users</p>
+              <p className="text-xs font-medium text-gray-600">Total de Usuarios</p>
               <p className="text-lg font-bold">{summary.total}</p>
             </div>
           </CardContent>
@@ -178,7 +178,7 @@ export default function UserKanbanBoard() {
         <Card className="h-16">
           <CardContent className="px-4 py-2 h-full flex items-center">
             <div>
-              <p className="text-xs font-medium text-gray-600">Active Users</p>
+              <p className="text-xs font-medium text-gray-600">Usuarios Activos</p>
               <p className="text-lg font-bold text-green-600">{summary.active}</p>
             </div>
           </CardContent>
@@ -186,7 +186,7 @@ export default function UserKanbanBoard() {
         <Card className="h-16">
           <CardContent className="px-4 py-2 h-full flex items-center">
             <div>
-              <p className="text-xs font-medium text-gray-600">Pending Invitations</p>
+              <p className="text-xs font-medium text-gray-600">Invitaciones Pendientes</p>
               <p className="text-lg font-bold text-yellow-600">{summary.pending}</p>
             </div>
           </CardContent>
@@ -194,7 +194,7 @@ export default function UserKanbanBoard() {
         <Card className="h-16">
           <CardContent className="px-4 py-2 h-full flex items-center">
             <div>
-              <p className="text-xs font-medium text-gray-600">Inactive Users</p>
+              <p className="text-xs font-medium text-gray-600">Usuarios Inactivos</p>
               <p className="text-lg font-bold text-gray-600">
                 {groupedUsers.inactive?.length || 0}
               </p>
@@ -213,7 +213,7 @@ export default function UserKanbanBoard() {
               {/* Column Header */}
               <div className={`p-4 rounded-t-lg ${config.headerColor} border-b`}>
                 <h3 className="font-semibold text-lg">{config.title}</h3>
-                <p className="text-sm opacity-75">{statusUsers.length} users</p>
+                <p className="text-sm opacity-75">{statusUsers.length} usuarios</p>
               </div>
               
               {/* User Cards */}
@@ -241,7 +241,7 @@ export default function UserKanbanBoard() {
                             {/* Status and Type Badges */}
                             <div className="flex flex-wrap gap-2">
                               <Badge variant={config.badgeVariant} className="text-xs">
-                                {isExpired ? 'Expired' : config.title}
+                                {isExpired ? 'Expirado' : config.title}
                               </Badge>
                               <Badge variant="outline" className="text-xs capitalize">
                                 {user.user_type}
@@ -260,7 +260,7 @@ export default function UserKanbanBoard() {
                             {user.type === 'invitation' ? (
                               <span>Invited {formatDate(user.created_at)}</span>
                             ) : (
-                              <span>Joined {formatDate(user.created_at)}</span>
+                              <span>Se unió {formatDate(user.created_at)}</span>
                             )}
                           </div>
                           
@@ -284,7 +284,7 @@ export default function UserKanbanBoard() {
                               className="flex items-center gap-1"
                             >
                               <Eye className="h-3 w-3" />
-                              View
+                              Ver
                             </Button>
                             
                             {user.type === 'invitation' && user.status === 'pending' && (
@@ -295,7 +295,7 @@ export default function UserKanbanBoard() {
                                 className="flex items-center gap-1 text-xs"
                               >
                                 <Mail className="h-3 w-3" />
-                                Resend
+                                Reenviar
                               </Button>
                             )}
                           </div>
@@ -307,7 +307,7 @@ export default function UserKanbanBoard() {
                 
                 {statusUsers.length === 0 && (
                   <div className="text-center py-8 text-gray-500 text-sm">
-                    No {config.title.toLowerCase()} users
+                    No hay usuarios {config.title.toLowerCase()}
                   </div>
                 )}
               </div>

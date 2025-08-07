@@ -76,7 +76,7 @@ export function AuthForm() {
         // Force a page refresh to ensure session is properly set
         window.location.href = '/chat-onboarding';
       } else {
-        setMessage('Success! Check your email for verification. The link expires in 1 hour.');
+        setMessage('¡Éxito! Revisa tu correo electrónico para verificación. El enlace expira en 1 hora.');
         setShowResendOption(true);
       }
     }
@@ -208,7 +208,9 @@ export function AuthForm() {
         <div className="mt-4 text-center text-sm">
           {isLogin ? (
             <>
-              Don't have an account?{' '}
+
+              Don&apos;t have an account?{' '}
+              
               <Button variant="link" onClick={() => setIsLogin(false)} className="p-0 h-auto">
                 Sign up
               </Button>
@@ -217,18 +219,23 @@ export function AuthForm() {
             <>
               Already have an account?{' '}
               <Button variant="link" onClick={() => setIsLogin(true)} className="p-0 h-auto">
-                Login
+                Iniciar Sesión
               </Button>
             </>
           )}
-          <Button variant="link" onClick={handleForgotPassword} className="p-0 h-auto ml-4">
-            Forgot password?
-          </Button>
         </div>
+        {isLogin && (
+          <div className="mt-2 text-center text-sm">
+            {/* Línea 227 */}
+            <Button variant="link" onClick={handleForgotPassword} className="p-0 h-auto">
+              ¿Olvidaste tu contraseña?
+            </Button>
+          </div>
+        )}
         {showResendOption && (
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600 mb-2">
-              Didn't receive the email or link expired?
+              ¿No recibiste el correo o el enlace expiró?
             </p>
             <Button 
               variant="outline" 
@@ -236,7 +243,7 @@ export function AuthForm() {
               disabled={loading}
               className="w-full"
             >
-              {loading ? 'Sending...' : 'Resend Verification Email'}
+              {loading ? 'Enviando...' : 'Reenviar Correo de Verificación'}
             </Button>
           </div>
         )}

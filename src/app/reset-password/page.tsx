@@ -63,15 +63,15 @@ export default function ResetPasswordPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
+          <CardTitle className="text-2xl">Restablecer Contraseña</CardTitle>
           <CardDescription>
-            Enter your email address and we'll send you a link to reset your password.
+            Ingresa tu dirección de correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleResetRequest} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Correo Electrónico</Label>
               <Input
                 id="email"
                 type="email"
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
               className="w-full" 
               disabled={loading}
             >
-              {loading ? 'Sending...' : 'Send Reset Link'}
+              {loading ? 'Enviando...' : 'Enviar Enlace de Restablecimiento'}
             </Button>
           </form>
           
@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
               onClick={() => router.push('/login')}
               className="text-sm"
             >
-              Back to Login
+              Volver a Iniciar Sesión
             </Button>
           </div>
         </CardContent>

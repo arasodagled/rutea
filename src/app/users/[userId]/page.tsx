@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,13 +39,8 @@ export default function UserDetailPage() {
   }, []);
   const userId = params.userId as string;
 
-  useEffect(() => {
-    if (userId) {
-      fetchUser();
-    }
-  }, [userId]);
-
-  const fetchUser = async () => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchUser = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -62,11 +57,17 @@ export default function UserDetailPage() {
       const userProfile = data && data.length > 0 ? data[0] : null;
       setUser(userProfile);
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUser();
+    }
+  }, [userId, fetchUser]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -134,17 +135,17 @@ export default function UserDetailPage() {
         </div>
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            User not found
+            Usuario no encontrado
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            The user you're looking for doesn't exist or you don't have permission to view it.
+            El usuario que buscas no existe o no tienes permisos para verlo.
           </p>
         </div>
       </div>
     );
   }
 
-  const fullName = `${user.first_name} ${user.last_name}`.trim() || 'No Name';
+  const fullName = `${user.first_name} ${user.last_name}`.trim() || 'Sin nombre';
 
   return (
     <div className="p-6">
@@ -168,7 +169,7 @@ export default function UserDetailPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            User Details
+            Detalles del Usuario
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -176,7 +177,7 @@ export default function UserDetailPage() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Full Name
+                  Nombre Completo
                 </label>
                 <p className="text-gray-900 dark:text-gray-100">{fullName}</p>
               </div>
@@ -219,12 +220,12 @@ export default function UserDetailPage() {
               
               <div>
                 <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Latest Update
+                  Última Actualización
                 </label>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <p className="text-gray-900 dark:text-gray-100">
-                    {isClient ? format(new Date(user.updated_at), 'MMM dd, yyyy') : 'Loading...'}
+                    {isClient ? format(new Date(user.updated_at), 'MMM dd, yyyy') : 'Cargando...'}
                   </p>
                 </div>
               </div>
@@ -247,7 +248,7 @@ export default function UserDetailPage() {
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      {user.cv_file_name || 'Download CV'}
+                      {user.cv_file_name || 'Descargar CV'}
                     </a>
                   </div>
                 ) : (

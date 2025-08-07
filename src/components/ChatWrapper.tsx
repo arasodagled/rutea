@@ -3,15 +3,16 @@
 import { useEffect, useState } from 'react';
 import { Chat } from '@/components/Chat';
 import { supabase } from '@/lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 export function ChatWrapper() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      // eslint-disable-next-line no-console
+
       console.log('ChatWrapper - Retrieved user:', user);
       setUser(user);
       setLoading(false);
@@ -22,7 +23,7 @@ export function ChatWrapper() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // eslint-disable-next-line no-console
+
         console.log('Auth state changed:', event, session?.user);
         setUser(session?.user || null);
         setLoading(false);

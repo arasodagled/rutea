@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -10,14 +10,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function AcceptInvitationPage() {
+interface InvitationData {
+  email: string | undefined;
+  firstName: string;
+  lastName: string;
+}
+
+// Componente que usa useSearchParams envuelto en Suspense
+function AcceptInvitationContent() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
-  const [invitationData, setInvitationData] = useState<any>(null);
+  const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
   const [error, setError] = useState('');
   
   const router = useRouter();
@@ -82,7 +89,7 @@ export default function AcceptInvitationPage() {
       return;
     }
     
-    setLoading(true); // Changed from setIsLoading
+    setLoading(true);
     
     try {
       console.log('🔄 Setting password...');
@@ -94,7 +101,7 @@ export default function AcceptInvitationPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: invitationData?.email, // Changed from userEmail
+          email: invitationData?.email || "", 
           password: password
         })
       });
@@ -129,7 +136,7 @@ export default function AcceptInvitationPage() {
       console.error('❌ Password setup failed:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to set password');
     } finally {
-      setLoading(false); // Changed from setIsLoading
+      setLoading(false);
     }
   };
 
@@ -140,7 +147,7 @@ export default function AcceptInvitationPage() {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-              <p>Verifying invitation...</p>
+              <p>Verificando invitación...</p>
             </div>
           </CardContent>
         </Card>
@@ -153,7 +160,7 @@ export default function AcceptInvitationPage() {
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-red-600">Invitation Error</CardTitle>
+            <CardTitle className="text-2xl text-red-600">Error de Invitación</CardTitle>
             <CardDescription>{error}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -161,7 +168,7 @@ export default function AcceptInvitationPage() {
               onClick={() => router.push('/login')} 
               className="w-full"
             >
-              Go to Login
+              Ir a Iniciar Sesión
             </Button>
           </CardContent>
         </Card>
@@ -173,10 +180,10 @@ export default function AcceptInvitationPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Set Your Password</CardTitle>
+          <CardTitle className="text-2xl">Establecer Tu Contraseña</CardTitle>
           <CardDescription>
-            Welcome {invitationData?.firstName} {invitationData?.lastName}! 
-            Please set a password for your account: {invitationData?.email}
+            ¡Bienvenido {invitationData?.firstName} {invitationData?.lastName}! 
+            Por favor establece una contraseña para tu cuenta: {invitationData?.email}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -250,5 +257,25 @@ export default function AcceptInvitationPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Componente principal que envuelve el contenido en Suspense
+export default function AcceptInvitationPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p>Cargando...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <AcceptInvitationContent />
+    </Suspense>
   );
 }

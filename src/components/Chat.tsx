@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -54,7 +53,6 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
   useEffect(() => {
     // Fetch chat history from Supabase
     const fetchMessages = async () => {
-      // eslint-disable-next-line no-console
       console.log('Fetching messages for userId:', userId);
       
       const { data, error } = await supabase
@@ -64,11 +62,11 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         .order('created_at', { ascending: true });
 
       if (error) {
-        // eslint-disable-next-line no-console
+
         console.error('Error fetching messages:', error);
       } else {
         const fetchedMessages = data || [];
-        // eslint-disable-next-line no-console
+
         console.log('Fetched messages:', fetchedMessages.length, fetchedMessages);
         setMessages(fetchedMessages);
         
@@ -130,7 +128,7 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         content: assistantContent,
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
+
       console.error(err);
       setMessages((m) => [
         ...m,
@@ -177,12 +175,12 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
           const delta = parsed.choices[0].delta.content;
           if (delta) onDelta(delta);
         } catch (err) {
-          // eslint-disable-next-line no-console
+
           console.error('Stream parse error', err, ev.data);
         }
       },
       onerror: (err) => {
-        // eslint-disable-next-line no-console
+
         console.error('Stream error', err);
         throw err;
       },
@@ -241,15 +239,15 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
           });
           
           if (response.ok) {
-            // eslint-disable-next-line no-console
+
             console.log('Resumen saved successfully');
           } else {
-          // eslint-disable-next-line no-console
+
           console.error('Failed to save resumen');
         }
         }
       } catch (error) {
-        // eslint-disable-next-line no-console
+
         console.error('Error processing JSON resumen:', error);
       }
       
@@ -260,7 +258,7 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         content: assistantContent,
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
+
       console.error(err);
       setMessages((m) => [
         ...m,
