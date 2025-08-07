@@ -9,48 +9,54 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ResetPasswordPage() {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const accessToken = searchParams.get('access_token');
 
+  // Check if this is a password reset callback with tokens
   useEffect(() => {
-    if (accessToken) {
-      // Optionally, you can verify the access token with Supabase here
-      // For now, we'll just proceed with the form
+    const tokenHash = searchParams.get('token_hash');
+    const type = searchParams.get('type');
+    
+    if (tokenHash && type === 'recovery') {
+      // Redirect to confirm page with the tokens
+      const confirmUrl = `/reset-password/confirm?${searchParams.toString()}`;
+      router.replace(confirmUrl);
+      return;
     }
-  }, [accessToken]);
+  }, [searchParams, router]);
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email) {
+      setMessage('Please enter your email address');
+      return;
+    }
+
     setLoading(true);
-    setMessage('');
+    setMessage(null);
 
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match.');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        console.error('Reset password error:', error);
+        setMessage(`Error: ${error.message}`);
+      } else {
+        setMessage('Check your email for the password reset link!');
+        setEmail('');
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setMessage(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    if (!accessToken) {
-      setMessage('No access token found. Please use the link from your email.');
-      setLoading(false);
-      return;
-    }
-
-    // Set the new password using the access token
-    const { error } = await supabase.auth.updateUser({ password });
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage('Your password has been updated successfully. You can now log in.');
-      router.push('/login');
-    }
-    setLoading(false);
   };
 
   return (
@@ -59,36 +65,51 @@ export default function ResetPasswordPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Reset Password</CardTitle>
           <CardDescription>
-            Enter your new password below.
+            Enter your email address and we'll send you a link to reset your password.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handlePasswordReset} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="password">New Password</Label>
+          <form onSubmit={handleResetRequest} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="password"
-                type="password"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <Input
-                id="confirm-password"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : 'Reset Password'}
+            
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loading}
+            >
+              {loading ? 'Sending...' : 'Send Reset Link'}
             </Button>
-            {message && <p className="text-center text-sm text-red-500">{message}</p>}
           </form>
+          
+          {message && (
+            <div className={`mt-4 p-3 rounded text-center ${
+              message.includes('Error')
+                ? 'bg-red-100 text-red-700 border border-red-300'
+                : 'bg-green-100 text-green-700 border border-green-300'
+            }`}>
+              {message}
+            </div>
+          )}
+          
+          <div className="mt-4 text-center">
+            <Button 
+              variant="link" 
+              onClick={() => router.push('/login')}
+              className="text-sm"
+            >
+              Back to Login
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -7,11 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Add the missing state variables
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [userType, setUserType] = useState('user'); // Add userType state
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showResendOption, setShowResendOption] = useState(false);
@@ -27,13 +34,37 @@ export function AuthForm() {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
       error = signInError;
     } else {
-      const { error: signUpError } = await supabase.auth.signUp({
+      // Direct signup with user profile creation
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            signup_type: 'direct' // Flag to identify direct signup
+          },
         },
       });
+      
+      if (!signUpError && authData.user) {
+        // Create user profile immediately for direct signups
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .insert({
+            user_id: authData.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            user_type: userType, // Use selected userType instead of hardcoded 'user'
+            status: 'active'
+          });
+        
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+        }
+      }
+      
       error = signUpError;
     }
 
@@ -42,7 +73,8 @@ export function AuthForm() {
       setShowResendOption(false);
     } else {
       if (isLogin) {
-        router.push('/');
+        // Force a page refresh to ensure session is properly set
+        window.location.href = '/chat-onboarding';
       } else {
         setMessage('Success! Check your email for verification. The link expires in 1 hour.');
         setShowResendOption(true);
@@ -52,16 +84,8 @@ export function AuthForm() {
   };
 
   const handleForgotPassword = async () => {
-    setLoading(true);
-    setMessage('');
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset-password` });
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage('Password reset email sent. Check your inbox.');
-    }
-    setLoading(false);
+    // Instead of sending email directly, redirect to reset-password page
+    router.push('/reset-password');
   };
 
   const handleResendVerification = async () => {
@@ -99,6 +123,45 @@ export function AuthForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid gap-4">
+          {!isLogin && (
+            <>
+              <div className="grid gap-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="John"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Doe"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="userType">User Type</Label>
+                <Select value={userType} onValueChange={setUserType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select user type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="coach">Coach</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -112,13 +175,30 @@ export function AuthForm() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-400" />
+                )}
+              </Button>
+            </div>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Loading...' : (isLogin ? 'Login' : 'Sign Up')}

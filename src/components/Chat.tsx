@@ -8,6 +8,29 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabase';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 
+// Función para formatear el texto de OpenAI
+function formatOpenAIText(text: string): string {
+  // Agregar saltos de línea simples antes de números seguidos de punto
+  let formatted = text.replace(/(\d+\.)\s*/g, '\n$1 ');
+  
+  // Convertir **texto** a <strong>texto</strong>
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Convertir *texto* a <em>texto</em>
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Limpiar saltos de línea múltiples al inicio
+  formatted = formatted.replace(/^\n+/, '');
+  
+  // Eliminar saltos de línea múltiples consecutivos
+  formatted = formatted.replace(/\n\s*\n\s*\n/g, '\n');
+  
+  // Convertir saltos de línea a <br>
+  formatted = formatted.replace(/\n/g, '<br>');
+  
+  return formatted;
+}
+
 interface Message {
   id?: string;
   user_id: string;
@@ -20,11 +43,20 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // Fetch chat history from Supabase
     const fetchMessages = async () => {
+      // eslint-disable-next-line no-console
+      console.log('Fetching messages for userId:', userId);
+      
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -32,9 +64,12 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         .order('created_at', { ascending: true });
 
       if (error) {
+        // eslint-disable-next-line no-console
         console.error('Error fetching messages:', error);
       } else {
         const fetchedMessages = data || [];
+        // eslint-disable-next-line no-console
+        console.log('Fetched messages:', fetchedMessages.length, fetchedMessages);
         setMessages(fetchedMessages);
         
         // If no previous messages, send initial prompt
@@ -95,24 +130,31 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         content: assistantContent,
       });
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
       setMessages((m) => [
         ...m,
-        { user_id: userId, role: 'assistant', content: 'Error: Could not stream.' },
+        { user_id: userId, role: 'assistant', content: 'Error: No se pudo establecer la conexión.' },
       ]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Additional scroll during streaming for real-time updates
+  useEffect(() => {
+    if (loading) {
+      const intervalId = setInterval(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      }, 100);
+      return () => clearInterval(intervalId);
+    }
+  }, [loading]);
 
   async function streamChat(
     messages: Message[],
@@ -135,10 +177,12 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
           const delta = parsed.choices[0].delta.content;
           if (delta) onDelta(delta);
         } catch (err) {
+          // eslint-disable-next-line no-console
           console.error('Stream parse error', err, ev.data);
         }
       },
       onerror: (err) => {
+        // eslint-disable-next-line no-console
         console.error('Stream error', err);
         throw err;
       },
@@ -197,12 +241,15 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
           });
           
           if (response.ok) {
+            // eslint-disable-next-line no-console
             console.log('Resumen saved successfully');
           } else {
-            console.error('Failed to save resumen');
-          }
+          // eslint-disable-next-line no-console
+          console.error('Failed to save resumen');
+        }
         }
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Error processing JSON resumen:', error);
       }
       
@@ -213,10 +260,11 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         content: assistantContent,
       });
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error(err);
       setMessages((m) => [
         ...m,
-        { user_id: userId, role: 'assistant', content: 'Error: Could not stream.' },
+        { user_id: userId, role: 'assistant', content: 'Error: No se pudo establecer la conexión.' },
       ]);
     } finally {
       setLoading(false);
@@ -224,20 +272,44 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
   };
 
   return (
-    <div className="flex flex-col h-[80vh] w-full max-w-3xl">
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
-        <div className="space-y-4">
+    <div className="h-full w-full max-w-3xl mx-auto">
+      {/* Chat Header - fixed to viewport top */}
+      <div className="fixed top-0 left-0 right-0 lg:left-64 z-50 bg-white dark:bg-gray-900 flex items-center justify-between py-4 px-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-3">
+          <Avatar className="w-12 h-12">
+            <AvatarImage src="/images/rutea-avatar.png" alt="Maria Rutea" />
+            <AvatarFallback className="text-lg">MR</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              Maria Rutea
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              ¿Tienes alguna duda o problema?
+            </p>
+          </div>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="bg-white hover:bg-gray-50 text-gray-700 border-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+          onClick={() => {
+            // You can add contact functionality here
+            console.log('Contact button clicked');
+          }}
+        >
+          Contáctanos
+        </Button>
+      </div>
+      
+      {/* Chat content */}
+      <div className="space-y-4 p-4 pt-24">
+          
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {msg.role === 'assistant' && (
-                <Avatar>
-                  <AvatarImage src="/images/rutea-avatar.png" />
-                  <AvatarFallback>AI</AvatarFallback>
-                </Avatar>
-              )}
               <div
                 className={`rounded-lg p-3 max-w-[70%] ${
                   msg.role === 'user'
@@ -245,31 +317,62 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
                     : 'text-gray-800 dark:text-gray-200'
                 }`}
               >
-                <p className="text-sm">{msg.content}</p>
+                {msg.role === 'assistant' ? (
+                  isClient ? (
+                    <div 
+                      className="text-sm leading-relaxed"
+                      dangerouslySetInnerHTML={{ 
+                        __html: formatOpenAIText(msg.content) 
+                      }}
+                    />
+                  ) : (
+                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                  )
+                ) : (
+                  <p className="text-sm">{msg.content}</p>
+                )}
               </div>
-              {msg.role === 'user' && (
-                <Avatar>
-                  <AvatarFallback className="bg-indigo-100 text-indigo-900 font-semibold">
-                    {userEmail.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              )}
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
-      </ScrollArea>
-      <form onSubmit={handleSendMessage} className="flex p-4 gap-2">
-        <textarea
-          placeholder="Type your message..."
-          className="flex-1 min-h-[2.5rem] max-h-[80px] resize-none overflow-y-auto p-2 border rounded-md leading-normal"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          disabled={loading}
-        />
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Sending...' : 'Send'}
-        </Button>
-      </form>
-    </div>
+        
+        <form onSubmit={handleSendMessage} className="p-4">
+          <div className="relative flex items-end bg-white border border-gray-300 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-200 focus-within:border-gray-400 focus-within:shadow-md">
+            <textarea
+              placeholder="Pregunta lo que quieras"
+              className="flex-1 min-h-[24px] max-h-[200px] resize-none bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 border-none outline-none leading-6"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={loading}
+              rows={1}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = Math.min(target.scrollHeight, 200) + 'px';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(e);
+                }
+              }}
+            />
+            <button
+              type="submit"
+              disabled={loading || !input.trim()}
+              className="absolute right-2 bottom-2 p-2 rounded-full bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="transform rotate-45">
+                  <path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
   );
 }

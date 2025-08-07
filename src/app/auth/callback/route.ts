@@ -8,20 +8,7 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
-  // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/';
-
-  // Debug: Log all URL parameters to understand what's being received
-  console.log('=== AUTH CALLBACK DEBUG ===');
-  console.log('Full URL:', request.url);
-  console.log('All search params:');
-  for (const [key, value] of searchParams.entries()) {
-    console.log(`  ${key}: ${value}`);
-  }
-  console.log('Code parameter:', code);
-  console.log('Token hash parameter:', token_hash);
-  console.log('Type parameter:', type);
-  console.log('==========================');
 
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -46,41 +33,33 @@ export async function GET(request: Request) {
   let authResult = null;
 
   if (token_hash && type) {
-     // Handle email verification with token_hash and type (newer flow)
-     console.log('Using verifyOtp with token_hash and type');
-     authResult = await supabase.auth.verifyOtp({
-       type,
-       token_hash,
-     });
-     error = authResult.error;
-     console.log('VerifyOtp result:', { error: authResult.error, user: authResult.data?.user?.id, session: !!authResult.data?.session });
+    // Handle different token types
+    if (type === 'invite') {
+      // For invitations, redirect without verification
+      return NextResponse.redirect(`${origin}/accept-invitation?token_hash=${token_hash}&type=${type}`);
+    } else if (type === 'recovery') {
+      // For password recovery, redirect to reset page with token
+      // The reset page will handle verification when user submits new password
+      return NextResponse.redirect(`${origin}/reset-password?token_hash=${token_hash}&type=${type}`);
+    } else {
+      // Handle other types (signup confirmation, etc.)
+      authResult = await supabase.auth.verifyOtp({
+        type,
+        token_hash,
+      });
+      error = authResult.error;
+    }
   } else if (code) {
-    // Handle OAuth callback with code (older flow)
-    console.log('Using exchangeCodeForSession with code');
+    // Handle OAuth callback with code
     authResult = await supabase.auth.exchangeCodeForSession(code);
     error = authResult.error;
-    console.log('ExchangeCodeForSession result:', { error: authResult.error, user: authResult.data?.user?.id, session: !!authResult.data?.session });
   } else {
-    console.log('No authentication parameters found - this means the email link is not properly formatted');
-    console.log('Expected: either (token_hash + type) OR (code)');
-    console.log('This suggests the Supabase email template needs to be updated');
+    return NextResponse.redirect(`${origin}/auth/auth-code-error?error=Invalid authentication link`);
   }
 
-  // Check current session state
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-  console.log('Current session after auth attempt:', { 
-    hasSession: !!session, 
-    userId: session?.user?.id, 
-    sessionError 
-  });
-
-  if (!error && (authResult?.data?.session || session)) {
-    console.log('Authentication successful, redirecting to:', `${origin}${next}`);
+  if (!error && (authResult?.data?.session)) {
     return NextResponse.redirect(`${origin}${next}`);
-  } else {
-    console.log('Authentication failed:', { error, hasAuthResult: !!authResult, hasSession: !!session });
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${error?.message || 'Authentication failed'}`);
 }
