@@ -152,7 +152,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Sidebar header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex-none flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <Link href="/" onClick={onToggle} data-nav="true">
             <Image src="/images/rutea-logo-color.svg" alt="Rutea" width={96} height={32} className="h-8 w-auto" />
           </Link>
@@ -166,8 +166,8 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           </Button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4">
+        {/* Navigation - make it scrollable if needed */}
+        <nav className="flex-1 p-4 overflow-y-auto">
           <ul className="space-y-2">
             {navigationItems.map((item) => (
               <li key={item.href}>
@@ -191,9 +191,9 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* User section - positioned at bottom */}
+        {/* User section - ensure it's always visible */}
         {user && (
-          <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex-none p-4 border-t border-gray-200 dark:border-gray-700">
             <div className="mb-3">
               <p className="text-sm text-gray-600 dark:text-gray-400">Signed in as:</p>
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">

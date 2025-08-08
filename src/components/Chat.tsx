@@ -301,8 +301,8 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
       </div>
       
       {/* Chat content - scrollable area */}
-      <div className="flex-grow overflow-y-auto h-0 min-h-0" ref={scrollAreaRef}>
-        <div className="space-y-4 p-4">
+      <div className="flex-grow overflow-y-auto h-0 min-h-0 flex-shrink" ref={scrollAreaRef}>
+        <div className="space-y-4 p-4 w-full">
           {messages.map((msg, index) => (
             <div
               key={index}

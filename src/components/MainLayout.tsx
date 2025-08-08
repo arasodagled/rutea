@@ -55,7 +55,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </Suspense>
       
       {/* Main layout container */}
-      <div className="flex h-screen">
+      <div className="flex h-screen overflow-hidden">
         {/* Sidebar - only show when user is logged in */}
         {showSidebar && (
           <Sidebar 
@@ -66,7 +66,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         )}
         
         {/* Main content */}
-        <main className={`flex-1 relative overflow-auto ${!showSidebar ? 'w-full' : ''}`}>
+        <main className={`flex-1 relative overflow-hidden flex flex-col ${!showSidebar ? 'w-full' : ''}`}>
           {/* Mobile menu button - only show when user is logged in and sidebar is closed */}
           {showSidebar && (
             <button
