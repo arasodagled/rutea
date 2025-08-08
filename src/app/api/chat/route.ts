@@ -178,33 +178,6 @@ Y continúa con:
 
 Cuando confirme identificación y efecto emocional:
 
-**IMPORTANTE:** Debes responder ÚNICAMENTE con un JSON válido que contenga toda la información del resumen recopilada durante la conversación. El formato debe ser exactamente:
-
-{
-  "resumen": {
-    "proposito": "[propósito identificado]",
-    "talentos_clave": ["talento1", "talento2", "talento3"],
-    "motivaciones": ["motivación1", "motivación2"],
-    "experiencia_destacada": "[experiencia más relevante]",
-    "claridad_actual": "[número del 0-10]",
-    "cambio_carrera": "[respuesta sobre cambio de carrera]",
-    "vision_1_ano": {
-      "rol": "[rol deseado]",
-      "empresa": "[tipo de empresa]",
-      "industria": "[industria preferida]",
-      "equipo": "[tipo de equipo]",
-      "ambiente": "[ambiente laboral]",
-      "salario": "[rango salarial]",
-      "beneficios": "[beneficios deseados]"
-    },
-    "impacto_ejercicio": "[impacto emocional del ejercicio]"
-  }
-}
-
-No agregues texto adicional, solo el JSON.
-
----
-
 ### 6. Cierre & Próximos pasos
 
 > 🙏 «Gracias por tu tiempo.
