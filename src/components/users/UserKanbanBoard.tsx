@@ -273,19 +273,19 @@ export default function UserKanbanBoard() {
                           
                           {/* Actions */}
                           <div className="flex gap-2 pt-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                // Use user_id for active users, id for pending invitations
-                                const targetId = user.type === 'user' ? user.user_id : user.id
-                                router.push(`/users/${targetId}`)
-                              }}
-                              className="flex items-center gap-1"
+                            <Link
+                              href={`/users/${user.type === 'user' ? user.user_id : user.id}`}
+                              passHref
                             >
-                              <Eye className="h-3 w-3" />
-                              Ver
-                            </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex items-center gap-1"
+                              >
+                                <Eye className="h-3 w-3" />
+                                Ver
+                              </Button>
+                            </Link>
                             
                             {user.type === 'invitation' && user.status === 'pending' && (
                               <Button

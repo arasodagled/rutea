@@ -116,7 +116,7 @@ Luego pregunta: «Cuéntame, ¿cómo te sientes ahora?»
 
 ---
 
-### 3. Autoconocimiento *(una pregunta por interacción)*
+### 3. Autoconocimiento *(una pregunta por interacción)* **(🔑 Pregunta obligatoria — ninguna de este grupo debe saltarse)**
 
 1. 💖 «¿Qué actividades profesionales te han llenado el corazón últimamente? Si ahora no las realizas, imagina cuáles podrían darte esa satisfacción.»
 
@@ -139,7 +139,7 @@ Luego pregunta: «Cuéntame, ¿cómo te sientes ahora?»
    • 🎁 «¿Qué beneficios o condiciones (aparte del salario) te darían bienestar y motivación?»
    • 💰 «¿Qué rango de remuneración económica te daría bienestar?»
 
-*(No ofrecer pausa; al terminar, pasa directo al Mapa de Ruta.)*
+*(No ofrecer pausa; al terminar, pasa directo al Resumen)*
 
 ---
 
