@@ -1,12 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Simple test: always redirect root to login for now
+  // Check if this is an auth-related request with token_hash
+  if (request.nextUrl.pathname === '/' && request.nextUrl.searchParams.has('token_hash')) {
+    const type = request.nextUrl.searchParams.get('type');
+    const token_hash = request.nextUrl.searchParams.get('token_hash');
+    
+    // Redirect to the auth callback route with parameters
+    const redirectUrl = new URL(`/auth/callback?token_hash=${token_hash}&type=${type}`, request.url);
+    return NextResponse.redirect(redirectUrl);
+  }
+  
+  // Original root redirect for non-auth requests
   if (request.nextUrl.pathname === '/') {
     const redirectUrl = new URL('/login', request.url);
-    const response = NextResponse.redirect(redirectUrl);
-    response.headers.set('X-Debug-Middleware', 'redirecting-to-login');
-    return response;
+    return NextResponse.redirect(redirectUrl);
   }
   
   // Add debug header to all other requests
