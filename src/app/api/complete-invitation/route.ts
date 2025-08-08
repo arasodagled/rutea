@@ -58,12 +58,21 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Create or update user profile
+    // Get invitation data to retrieve first and last name
+    const { data: invitation } = await supabaseAdmin
+      .from('user_invitations')
+      .select('first_name, last_name')
+      .eq('email', email)
+      .eq('status', 'pending')
+      .single();
+    
+    // Create or update user profile with first and last name from invitation
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .upsert({
         user_id: user.id,
-        email: user.email,
+        first_name: invitation?.first_name || user.user_metadata?.first_name || '',
+        last_name: invitation?.last_name || user.user_metadata?.last_name || '',
         status: 'active',
         is_first_login: true,
         updated_at: new Date().toISOString()
@@ -72,20 +81,23 @@ export async function POST(request: NextRequest) {
       });
     
     if (profileError) {
-      console.error('Profile creation failed:', profileError);
-      // Don't fail the entire process for profile errors
+      console.error('Profile update failed:', profileError.message, profileError.details);
     }
     
     // If you have a user_invitations table, mark the invitation as accepted
     try {
-      await supabaseAdmin
+      const { error: inviteUpdateError } = await supabaseAdmin
         .from('user_invitations')
         .update({ 
-          status: 'accepted',
-          accepted_at: new Date().toISOString()
+          status: 'accepted'
+          // Remove the accepted_at field as it doesn't exist
         })
         .eq('email', user.email)
         .eq('status', 'pending');
+        
+      if (inviteUpdateError) {
+        console.error('Failed to update invitation status:', inviteUpdateError);
+      }
     } catch (inviteUpdateError) {
       console.log('Note: Could not update user_invitations table:', inviteUpdateError);
     }

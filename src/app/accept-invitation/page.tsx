@@ -24,6 +24,7 @@ function AcceptInvitationContent() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(true);
+  const [redirecting, setRedirecting] = useState(false); // New state for redirection loading
   const [invitationData, setInvitationData] = useState<InvitationData | null>(null);
   const [error, setError] = useState('');
   
@@ -102,7 +103,9 @@ function AcceptInvitationContent() {
         },
         body: JSON.stringify({
           email: invitationData?.email || "", 
-          password: password
+          password: password,
+          firstName: invitationData?.firstName || "",
+          lastName: invitationData?.lastName || ""
         })
       });
       
@@ -127,6 +130,9 @@ function AcceptInvitationContent() {
         return;
       }
       
+      // Show redirecting state
+      setRedirecting(true);
+      
       // Redirect to new user page
       setTimeout(() => {
         router.push('/new-user');
@@ -148,6 +154,22 @@ function AcceptInvitationContent() {
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
               <p>Verificando invitación...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (redirecting) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+              <p>Configurando tu cuenta...</p>
+              <p className="text-sm text-gray-500 mt-2">Serás redirigido en un momento</p>
             </div>
           </CardContent>
         </Card>

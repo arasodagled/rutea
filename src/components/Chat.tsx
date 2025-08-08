@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/lib/supabase';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 
@@ -279,9 +281,24 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
             <AvatarFallback className="text-lg">MR</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-              Maria Rutea
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                Maria Rutea
+              </h2>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    variant="secondary" 
+                    className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 cursor-pointer"
+                  >
+                    Beta
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Función en prueba — si falla, refresca la página para seguir.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               ¿Tienes alguna duda o problema?
             </p>
@@ -301,7 +318,7 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
       </div>
       
       {/* Chat content - scrollable area */}
-      <div className="flex-grow overflow-y-auto h-0 min-h-0 flex-shrink" ref={scrollAreaRef}>
+      <div className="flex-grow overflow-y-auto h-0 min-h-0" ref={scrollAreaRef}>
         <div className="space-y-4 p-4 w-full">
           {messages.map((msg, index) => (
             <div
