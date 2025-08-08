@@ -270,9 +270,9 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
   };
 
   return (
-    <div className="h-full w-full max-w-3xl mx-auto">
-      {/* Chat Header - fixed to viewport top */}
-      <div className="fixed top-0 left-0 right-0 lg:left-64 z-50 bg-white dark:bg-gray-900 flex items-center justify-between py-4 px-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="h-full w-full flex flex-col overflow-hidden">
+      {/* Chat Header - fixed at top */}
+      <div className="flex-none flex items-center justify-between py-4 px-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
           <Avatar className="w-12 h-12">
             <AvatarImage src="/images/rutea-avatar.png" alt="Maria Rutea" />
@@ -300,9 +300,9 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         </Button>
       </div>
       
-      {/* Chat content */}
-      <div className="space-y-4 p-4 pt-24">
-          
+      {/* Chat content - scrollable area */}
+      <div className="flex-grow overflow-y-auto" ref={scrollAreaRef}>
+        <div className="space-y-4 p-4">
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -334,8 +334,11 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
           ))}
           <div ref={messagesEndRef} />
         </div>
+      </div>
         
-        <form onSubmit={handleSendMessage} className="p-4">
+      {/* Chat input - fixed at bottom */}
+      <div className="flex-none p-4 border-t border-gray-200 dark:border-gray-700">
+        <form onSubmit={handleSendMessage}>
           <div className="relative flex items-end bg-white border border-gray-300 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-200 focus-within:border-gray-400 focus-within:shadow-md">
             <textarea
               placeholder="Pregunta lo que quieras"
@@ -372,5 +375,6 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
           </div>
         </form>
       </div>
+    </div>
   );
 }

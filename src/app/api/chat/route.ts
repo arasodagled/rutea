@@ -202,9 +202,9 @@ Cuando confirme identificación y efecto emocional:
       try {
         for await (const chunk of completion) {
           const data = JSON.stringify(chunk);
-          controller.enqueue(`data: ${data}\n\n`);
+          controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
         }
-        controller.enqueue('data: [DONE]\n\n');
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
         controller.close();
       } catch (error) {
         controller.error(error);
