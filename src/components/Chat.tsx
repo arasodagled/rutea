@@ -47,9 +47,15 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
   const [isClient, setIsClient] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null); // Add this line
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  // Focus textarea on mount
+  useEffect(() => {
+    textareaRef.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -268,6 +274,12 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
       ]);
     } finally {
       setLoading(false);
+      // Focus the textarea after sending a message with a longer timeout
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 100); // Increased from 0 to 100ms
     }
   };
 
@@ -358,12 +370,14 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
         <form onSubmit={handleSendMessage}>
           <div className="relative flex items-end bg-white border border-gray-300 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-200 focus-within:border-gray-400 focus-within:shadow-md">
             <textarea
+              ref={textareaRef}
               placeholder="Pregunta lo que quieras"
               className="flex-1 min-h-[24px] max-h-[200px] resize-none bg-transparent px-4 py-3 pr-12 text-gray-900 placeholder-gray-500 border-none outline-none leading-6"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
               rows={1}
+              autoFocus
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
                 target.style.height = 'auto';
