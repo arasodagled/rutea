@@ -94,7 +94,10 @@ function NewUserContent() {
       }
     }
 
-    if (formData.linkedinUrl && !isValidLinkedInUrl(formData.linkedinUrl)) {
+    // Validar que LinkedIn URL sea obligatorio
+    if (!formData.linkedinUrl) {
+      newErrors.linkedinUrl = 'Por favor ingresa tu URL de LinkedIn';
+    } else if (!isValidLinkedInUrl(formData.linkedinUrl)) {
       newErrors.linkedinUrl = 'Por favor ingresa una URL válida de LinkedIn';
     }
 
@@ -198,7 +201,7 @@ function NewUserContent() {
       const { error: updateError } = await supabase
         .from('user_profiles')
         .update({
-          linkedin_url: formData.linkedinUrl || null,
+          linkedin_url: formData.linkedinUrl,  // Ya no usamos || null porque es obligatorio
           cv_file_path: cvFilePath,
           cv_file_name: cvFileName,
           is_first_login: false,
@@ -213,7 +216,11 @@ function NewUserContent() {
       }
 
       toast.success('¡Perfil actualizado exitosamente!');
-      router.push('/chat-onboarding');
+      
+      // Añadir un pequeño retraso antes de la redirección para asegurar que la actualización se complete
+      setTimeout(() => {
+        router.push('/chat-onboarding');
+      }, 500);
     } catch (error) {
       console.error('Error saving user data:', error);
       toast.error('Error al guardar tu información. Por favor intenta de nuevo.');
@@ -313,7 +320,7 @@ function NewUserContent() {
 
             {/* LinkedIn URL */}
             <div className="space-y-2">
-              <Label htmlFor="linkedin">URL de perfil de LinkedIn (opcional)</Label>
+              <Label htmlFor="linkedin">URL de perfil de LinkedIn *</Label>
               <div className="relative">
                 <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -329,6 +336,7 @@ function NewUserContent() {
                   }}
                   className={`pl-10 ${errors.linkedinUrl ? 'border-red-500' : ''}`}
                   disabled={loading}
+                  required
                 />
               </div>
               {errors.linkedinUrl && (
