@@ -4,10 +4,13 @@ import { useEffect, useState } from 'react';
 import { Chat } from '@/components/Chat';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 export function ChatWrapper() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
@@ -43,8 +46,14 @@ export function ChatWrapper() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center gap-4">
         <div>Please log in to access the chat.</div>
+        <Button 
+          onClick={() => router.push('/login')}
+          variant="default"
+        >
+          Log in
+        </Button>
       </div>
     );
   }

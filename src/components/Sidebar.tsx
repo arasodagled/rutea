@@ -70,51 +70,32 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     if (isSigningOut) return; // Prevent multiple clicks
     
     setIsSigningOut(true);
+    toast.loading('Signing out...', { id: 'signout' });
     
     try {
-      // Show immediate feedback
-      toast.loading('Signing out...', { id: 'signout' });
+      // First attempt to sign out with Supabase
+      await supabase.auth.signOut();
       
-      // Set a timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Sign out timeout')), 10000)
-      );
-      
-      // Race between sign out and timeout
-      await Promise.race([
-        supabase.auth.signOut(),
-        timeoutPromise
-      ]);
-      
-      // Clear any cached data
+      // Then clear all storage and state
+      localStorage.clear();
+      sessionStorage.clear();
       setUser(null);
       setIsAdmin(false);
       
-      // Success feedback
-      toast.success('Signed out successfully', { id: 'signout' });
-      
-      // Force a hard redirect to ensure clean state
+      // Force a hard redirect after successful sign-out
       window.location.href = '/login';
-      
+      toast.success('Signed out successfully', { id: 'signout' });
     } catch (error) {
       console.error('Sign out error:', error);
       
-      // Show error feedback
-      toast.error('Failed to sign out. Please try again.', { id: 'signout' });
+      // Fallback: clear storage and redirect anyway
+      localStorage.clear();
+      sessionStorage.clear();
+      setUser(null);
+      setIsAdmin(false);
       
-      // Fallback: force sign out and redirect anyway
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-        window.location.href = '/login';
-      } catch (fallbackError) {
-        console.error('Fallback sign out failed:', fallbackError);
-        // Last resort: clear local storage and redirect
-        localStorage.clear();
-        sessionStorage.clear();
-        window.location.href = '/login';
-      }
-    } finally {
-      setIsSigningOut(false);
+      window.location.href = '/login';
+      toast.success('Signed out successfully', { id: 'signout' });
     }
   };
 

@@ -228,12 +228,12 @@ export default function UserKanbanBoard() {
                           {/* User Info with Badges */}
                           <div className="space-y-2">
                             <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-sm">
+                              <div className="flex-1 max-w-full overflow-hidden">
+                                <h4 className="font-medium text-sm truncate">
                                   {user.full_name || user.email}
                                 </h4>
                                 {user.full_name && (
-                                  <p className="text-xs text-gray-600 mt-1">{user.email}</p>
+                                  <p className="text-xs text-gray-600 mt-1 truncate">{user.email}</p>
                                 )}
                               </div>
                             </div>
