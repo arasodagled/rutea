@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { Sidebar } from '@/components/Sidebar';
+import { Sidebar, MobileMenuButton } from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { LoadingIndicator } from '@/components/LoadingIndicator';
+
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -67,6 +68,12 @@ export function MainLayout({ children }: MainLayoutProps) {
         
         {/* Main content */}
         <main className={`flex-1 relative overflow-y-auto flex flex-col ${!showSidebar ? 'w-full' : ''}`}>
+          {/* Add mobile menu button for logged-in users with reduced padding */}
+          {showSidebar && (
+            <div className="py-2 px-4 flex items-center lg:hidden">
+              <MobileMenuButton onClick={toggleSidebar} />
+            </div>
+          )}
           {children}
         </main>
       </div>
