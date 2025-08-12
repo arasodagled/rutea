@@ -73,8 +73,9 @@ export function AuthForm() {
       setShowResendOption(false);
     } else {
       if (isLogin) {
-        // Force a page refresh to ensure session is properly set
-        window.location.href = '/chat-onboarding';
+        // Change this line to redirect to root page instead of directly to chat-onboarding
+        // This allows the root page to check profile status and redirect accordingly
+        window.location.href = '/';
       } else {
         setMessage('¡Éxito! Revisa tu correo electrónico para verificación. El enlace expira en 1 hora.');
         setShowResendOption(true);
