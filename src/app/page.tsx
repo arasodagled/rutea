@@ -24,11 +24,12 @@ export default function Home() {
           // Check user profile to determine where to redirect
           const { data: profile } = await supabase
             .from('user_profiles')
-            .select('is_first_login, cv_file_path')
+            .select('is_first_login, cv_file_path, linkedin_url')
             .eq('user_id', session.user.id)
             .single();
 
-          if (profile?.is_first_login || !profile?.cv_file_path) {
+          // Redirect to new-user if first login, missing CV, or missing LinkedIn URL
+          if (profile?.is_first_login || !profile?.cv_file_path || !profile?.linkedin_url) {
             router.push('/new-user');
           } else {
             router.push('/chat-onboarding');
