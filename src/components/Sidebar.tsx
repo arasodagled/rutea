@@ -82,9 +82,12 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       setUser(null);
       setIsAdmin(false);
       
-      // Force a hard redirect after successful sign-out
-      window.location.href = '/login';
+      // Reset loading state before redirect
+      setIsSigningOut(false);
       toast.success('Signed out successfully', { id: 'signout' });
+      
+      // Use router.push instead of window.location.href for better reliability
+      router.push('/login');
     } catch (error) {
       console.error('Sign out error:', error);
       
@@ -94,8 +97,12 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       setUser(null);
       setIsAdmin(false);
       
-      window.location.href = '/login';
+      // Reset loading state before redirect
+      setIsSigningOut(false);
       toast.success('Signed out successfully', { id: 'signout' });
+      
+      // Use router.push instead of window.location.href
+      router.push('/login');
     }
   };
 

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/lib/supabase';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { useBottomAnchor } from '@/hooks/useBottomAnchor';
 
 // Función para formatear el texto de OpenAI
 function formatOpenAIText(text: string): string {
@@ -45,10 +46,15 @@ export const Chat = React.memo(function Chat({ userId, userEmail }: { userId: st
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(false); // Add this state
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(false);
+  
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null); // Add this line
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Replace all the manual scroll state with this hook
+  const { isNearBottom, isUserScrolling, scrollToBottom, maybeScrollToBottom } = 
+    useBottomAnchor(scrollAreaRef, messagesEndRef, { tolerance: 120 });
 
   useEffect(() => {
     setIsClient(true);
@@ -58,6 +64,50 @@ export const Chat = React.memo(function Chat({ userId, userEmail }: { userId: st
   useEffect(() => {
     textareaRef.current?.focus();
   }, []);
+
+  // REPLACE all the complex scroll effects with this single guarded effect
+  useEffect(() => {
+    if (!loading) return;
+    // messages changes on every chunk; follow only when near bottom
+    maybeScrollToBottom('auto');
+  }, [messages, loading, maybeScrollToBottom]);
+
+  // Keep exactly one "initial scroll" — and guard it
+  useEffect(() => {
+    if (messages.length === 0) return;
+    if (loading) return;                 // don't fight the stream
+    if (!isNearBottom) return;           // don't yank the user down
+    scrollToBottom('auto');
+  }, [messages.length, loading, isNearBottom, scrollToBottom]);
+
+  // Guard your "scroll the last user message to top" effect (optional)
+  useEffect(() => {
+    if (!shouldAutoScroll || isUserScrolling) return;
+    
+    // Find the LAST USER message (not just the last message)
+    let lastUserMessageIndex = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        lastUserMessageIndex = i;
+        break;
+      }
+    }
+    
+    if (lastUserMessageIndex !== -1) {
+      setTimeout(() => {
+        const messageElements = document.querySelectorAll('[data-message-index]');
+        const userMessageElement = messageElements[lastUserMessageIndex] as HTMLElement;
+        
+        if (userMessageElement) {
+          userMessageElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start'
+          });
+        }
+      }, 100);
+    }
+    setShouldAutoScroll(false);
+  }, [messages, shouldAutoScroll, isUserScrolling]);
 
   useEffect(() => {
     // Fetch chat history from Supabase
@@ -150,33 +200,58 @@ export const Chat = React.memo(function Chat({ userId, userEmail }: { userId: st
     }
   };
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll para mostrar el mensaje del usuario en la parte superior
   useEffect(() => {
-    if (shouldAutoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      setShouldAutoScroll(false); // Reset after scrolling
+    if (shouldAutoScroll && messages.length > 0) {
+      // Find the LAST USER message (not just the last message)
+      let lastUserMessageIndex = -1;
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === 'user') {
+          lastUserMessageIndex = i;
+          break;
+        }
+      }
+      
+      if (lastUserMessageIndex !== -1) {
+        // Usar setTimeout para asegurar que el DOM se haya actualizado
+        setTimeout(() => {
+          // Buscar el elemento del mensaje del usuario por índice
+          const messageElements = document.querySelectorAll('[data-message-index]');
+          const userMessageElement = messageElements[lastUserMessageIndex] as HTMLElement;
+          
+          if (userMessageElement) {
+            userMessageElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start' // Posiciona el mensaje del usuario en la parte superior
+            });
+          }
+        }, 100);
+      }
+      setShouldAutoScroll(false);
     }
   }, [messages, shouldAutoScroll]);
-
-  // Scroll to show AI response when it starts generating
+  
+  // Scroll para mostrar la respuesta de la IA cuando está generando
   useEffect(() => {
-    if (loading) {
-      // Small delay to ensure the AI message placeholder is added to DOM
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+    if (loading && messages.length > 0) {
+      // Solo hacer scroll si el último mensaje es del asistente
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.role === 'assistant') {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
     }
-  }, [loading]); // Trigger when loading state changes
+  }, [loading, messages.length]);
 
-  // Add this new useEffect to scroll to last message on page load
+  // Scroll inicial al cargar la página
   useEffect(() => {
     if (messages.length > 0 && !loading) {
-      // Small delay to ensure DOM is updated
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       }, 100);
     }
-  }, [messages.length]); // Only trigger when message count changes
+  }, [messages.length]);
 
   async function streamChat(
     messages: Message[],
@@ -194,38 +269,39 @@ export const Chat = React.memo(function Chat({ userId, userEmail }: { userId: st
           body: JSON.stringify({ messages }),
           onopen: async (res) => {
             if (!res.ok) {
-              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+              const errorText = await res.text();
+              throw new Error(`HTTP ${res.status}: ${res.statusText} - ${errorText}`);
             }
           },
           onmessage: (ev) => {
             if (ev.data === '[DONE]') return;
             try {
-              const parsed = JSON.parse(ev.data);
-              const delta = parsed.choices[0].delta.content;
-              if (delta) onDelta(delta);
-            } catch (err) {
-              console.error('Stream parse error', err, ev.data);
-              // Don't throw here, just log and continue
+              const data = JSON.parse(ev.data);
+              if (data.content) {
+                onDelta(data.content);
+              }
+            } catch (e) {
+              console.error('Error parsing stream data:', e);
             }
           },
           onerror: (err) => {
-            console.error('Stream error', err);
-            if (retryCount < maxRetries) {
-              retryCount++;
-              console.log(`Retrying stream (${retryCount}/${maxRetries})...`);
-              setTimeout(() => attemptStream(), 1000 * retryCount);
-            } else {
-              onError?.(new Error('Stream failed after multiple retries'));
-            }
+            console.error('Stream error:', err);
             throw err;
           },
+          // Add timeout to prevent hanging
+          signal: AbortSignal.timeout(30000) // 30 second timeout
         });
       } catch (error) {
         if (retryCount < maxRetries) {
           retryCount++;
           console.log(`Retrying stream (${retryCount}/${maxRetries})...`);
-          setTimeout(() => attemptStream(), 1000 * retryCount);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          return attemptStream();
         } else {
+          console.error('Max retries reached for stream');
+          if (onError) {
+            onError(error as Error);
+          }
           throw error;
         }
       }
@@ -236,91 +312,126 @@ export const Chat = React.memo(function Chat({ userId, userEmail }: { userId: st
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || loading) return;
 
-    // 1️⃣ Insert user message locally & to Supabase
-    const userMsg: Message = { user_id: userId, role: 'user', content: input };
-    setMessages((m) => [...m, userMsg]);
-    setShouldAutoScroll(true); // Trigger scroll for user message
-    await supabase.from('messages').insert(userMsg);
+    const messageContent = input.trim();
     setInput('');
-    setLoading(true);
+    
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
 
-    // 2️⃣ Prepare assistant placeholder
-    setMessages((m) => [...m, { user_id: userId, role: 'assistant', content: '' }]);
-    // Note: Don't set shouldAutoScroll here - we don't want to scroll for AI messages
-
-    // 3️⃣ Stream from API
-    let assistantContent = '';
     try {
-      await streamChat([...messages, userMsg], (delta) => {
+      // 1️⃣ Insert user message
+      const userMsg: Message = { user_id: userId, role: 'user', content: messageContent };
+      
+      // Update state and get the current messages
+      let currentMessages: Message[] = [];
+      setMessages((prev) => {
+        currentMessages = [...prev, userMsg];
+        return currentMessages;
+      });
+      setShouldAutoScroll(true);
+      
+      const { error: insertError } = await supabase.from('messages').insert(userMsg);
+      if (insertError) {
+        console.error('Error inserting user message:', insertError);
+        setMessages((m) => m.slice(0, -1));
+        setInput(messageContent);
+        return;
+      }
+      
+      setLoading(true);
+
+      // 2️⃣ Prepare assistant placeholder
+      setMessages((prev) => [...prev, { user_id: userId, role: 'assistant', content: '' }]);
+
+      // 3️⃣ Stream from API - use currentMessages instead of stale state
+      let assistantContent = '';
+      
+      await streamChat(currentMessages, (delta) => {
         assistantContent += delta;
         setMessages((prev) => {
           const last = prev[prev.length - 1];
-          return [
-            ...prev.slice(0, -1),
-            { ...last, content: assistantContent },
-          ];
+          if (last && last.role === 'assistant') {
+            return [
+              ...prev.slice(0, -1),
+              { ...last, content: assistantContent },
+            ];
+          }
+          return prev;
+        });
+      }, (error) => {
+        // Handle stream errors properly
+        console.error('Stream failed:', error);
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last && last.role === 'assistant') {
+            return [
+              ...prev.slice(0, -1),
+              { ...last, content: 'Error: No se pudo establecer la conexión. Por favor, intenta de nuevo.' },
+            ];
+          }
+          return prev;
         });
       });
-      // 4️⃣ Check if response is a JSON resumen and save it
-      try {
-        // Try to parse the entire response as JSON first
-        let parsedJson;
+      
+      // Only save if we got content
+      if (assistantContent.trim()) {
+        // 4️⃣ Process JSON resumen if present
         try {
-          parsedJson = JSON.parse(assistantContent.trim());
-        } catch {
-          // If that fails, look for JSON pattern in the text
-          const jsonMatch = assistantContent.match(/{[\s\S]*"resumen"[\s\S]*}/); 
-          if (jsonMatch) {
-            parsedJson = JSON.parse(jsonMatch[0]);
+          let parsedJson;
+          try {
+            parsedJson = JSON.parse(assistantContent.trim());
+          } catch {
+            const jsonMatch = assistantContent.match(/{[\s\S]*"resumen"[\s\S]*}/);
+            if (jsonMatch) {
+              parsedJson = JSON.parse(jsonMatch[0]);
+            }
           }
+          
+          if (parsedJson && parsedJson.resumen) {
+            const response = await fetch('/api/resumen', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ resumen: parsedJson.resumen }),
+            });
+            
+            if (response.ok) {
+              console.log('Resumen saved successfully');
+            } else {
+              console.error('Failed to save resumen');
+            }
+          }
+        } catch (error) {
+          console.error('Error processing JSON resumen:', error);
         }
         
-        if (parsedJson && parsedJson.resumen) {
-          // Save resumen to database
-          const response = await fetch('/api/resumen', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ resumen: parsedJson.resumen }),
-          });
-          
-          if (response.ok) {
-
-            console.log('Resumen saved successfully');
-          } else {
-
-          console.error('Failed to save resumen');
+        // 5️⃣ Save complete assistant message
+        const { error: assistantInsertError } = await supabase.from('messages').insert({
+          user_id: userId,
+          role: 'assistant',
+          content: assistantContent,
+        });
+        
+        if (assistantInsertError) {
+          console.error('Error inserting assistant message:', assistantInsertError);
         }
-        }
-      } catch (error) {
-
-        console.error('Error processing JSON resumen:', error);
       }
       
-      // 5️⃣ Save complete assistant message
-      await supabase.from('messages').insert({
-        user_id: userId,
-        role: 'assistant',
-        content: assistantContent,
-      });
     } catch (err) {
-
-      console.error(err);
+      console.error('Error in handleSendMessage:', err);
       setMessages((m) => [
         ...m,
-        { user_id: userId, role: 'assistant', content: 'Error: No se pudo establecer la conexión.' },
+        { user_id: userId, role: 'assistant', content: 'Error: No se pudo establecer la conexión. Por favor, intenta de nuevo.' },
       ]);
     } finally {
       setLoading(false);
-      // Focus the textarea after sending a message with a longer timeout
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
         }
-      }, 100); // Increased from 0 to 100ms
+      }, 100);
     }
   };
 
@@ -376,6 +487,7 @@ export const Chat = React.memo(function Chat({ userId, userEmail }: { userId: st
           {messages.map((msg, index) => (
             <div
               key={index}
+              data-message-index={index}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div

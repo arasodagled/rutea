@@ -201,12 +201,18 @@ Cuando confirme identificación y efecto emocional:
     async start(controller) {
       try {
         for await (const chunk of completion) {
-          const data = JSON.stringify(chunk);
-          controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
+          // Extract the content from OpenAI chunk structure
+          const content = chunk.choices?.[0]?.delta?.content;
+          if (content) {
+            // Send only the content in the expected format
+            const data = JSON.stringify({ content });
+            controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`));
+          }
         }
         controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
         controller.close();
       } catch (error) {
+        console.error('Streaming error:', error);
         controller.error(error);
       }
     },
