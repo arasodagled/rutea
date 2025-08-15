@@ -127,7 +127,7 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
 
   // Single source of truth for message management
   useEffect(() => {
-    let subscription: any = null;
+    let subscription: ReturnType<typeof supabase.channel> | null = null;
     
     const setupChat = async () => {
       try {
