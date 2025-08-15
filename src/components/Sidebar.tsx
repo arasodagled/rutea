@@ -216,7 +216,7 @@ export function MobileMenuButton({ onClick }: { onClick: () => void }) {
       size="sm"
       onClick={onClick}
       className="lg:hidden"
-      data-nav="true"
+      //data-nav="true"
     >
       <Menu className="h-5 w-5" />
     </Button>

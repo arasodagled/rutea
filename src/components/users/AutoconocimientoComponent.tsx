@@ -168,7 +168,7 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <Calendar className="h-4 w-4" />
-            <span>Completado {isClient ? format(new Date(resumen.created_at), 'dd MMM yyyy', { locale: es }) : "Cargando..."}</span>
+            <span>Completado {isClient ? format(new Date(resumen.updated_at), 'dd MMM yyyy', { locale: es }) : "Cargando..."}</span>
           </div>
           <Button
             onClick={regenerateResumen}
@@ -299,19 +299,25 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {resumen.vision_1_ano && typeof resumen.vision_1_ano === 'object' ? (
-            <div className="space-y-3">
-              {Object.entries(resumen.vision_1_ano).map(([key, value]) => (
-                <div key={key}>
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100 capitalize">
-                    {key.replace(/_/g, ' ')}
-                  </h4>
-                  <p className="text-gray-700 dark:text-gray-300 mt-1">
-                    {String(value)}
-                  </p>
-                </div>
-              ))}
-            </div>
+          {resumen.vision_1_ano ? (
+            typeof resumen.vision_1_ano === 'object' ? (
+              <div className="space-y-3">
+                {Object.entries(resumen.vision_1_ano).map(([key, value]) => (
+                  <div key={key}>
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+                      {key.replace(/_/g, ' ')}
+                    </h4>
+                    <p className="text-gray-700 dark:text-gray-300 mt-1">
+                      {String(value)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                {String(resumen.vision_1_ano)}
+              </p>
+            )
           ) : (
             <p className="text-gray-500 dark:text-gray-400">No 1-year vision defined</p>
           )}

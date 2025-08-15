@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabase';
+import { sanitizeFilename } from '@/lib/utils';
 import { Upload, FileText, Linkedin, AlertCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -152,23 +153,33 @@ function NewUserContent() {
   const uploadFile = async (file: File): Promise<string> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) throw new Error('No authenticated user');
-
+  
     const fileExt = file.name.split('.').pop();
-    const fileName = `cv-${Date.now()}.${fileExt}`;
-    const filePath = `${session.user.id}/${fileName}`; // Use user ID as folder for RLS policies
-
+    const originalName = file.name.replace(/\.[^/.]+$/, '');
+    const sanitizedName = sanitizeFilename(originalName);
+    const fileName = `${sanitizedName}-${Date.now()}.${fileExt}`;
+    const filePath = `${session.user.id}/${fileName}`;
+  
+    // Debug logging
+    console.log('Original filename:', file.name);
+    console.log('Original name without extension:', originalName);
+    console.log('Sanitized name:', sanitizedName);
+    console.log('Final filename:', fileName);
+    console.log('Full file path:', filePath);
+  
     const { error: uploadError } = await supabase.storage
       .from('user-files')
       .upload(filePath, file);
-
+  
     if (uploadError) {
+      console.error('Upload error:', uploadError);
       throw uploadError;
     }
-
+  
     const { data: { publicUrl } } = supabase.storage
       .from('user-files')
       .getPublicUrl(filePath);
-
+  
     return publicUrl;
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -40,11 +40,12 @@ interface Message {
   created_at?: string;
 }
 
-export function Chat({ userId, userEmail }: { userId: string; userEmail: string }) {
+export const Chat = React.memo(function Chat({ userId, userEmail }: { userId: string; userEmail: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(false); // Add this state
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null); // Add this line
@@ -109,11 +110,13 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
     // Insert initial user message
     const userMsg: Message = { user_id: userId, role: 'user', content: initialPrompt };
     setMessages([userMsg]);
+    setShouldAutoScroll(true); // Trigger scroll for initial user message
     await supabase.from('messages').insert(userMsg);
     setLoading(true);
 
     // Prepare assistant placeholder
     setMessages((m) => [...m, { user_id: userId, role: 'assistant', content: '' }]);
+    // Note: Don't set shouldAutoScroll here - we don't want to scroll for AI messages
 
     // Stream from API
     let assistantContent = '';
@@ -149,50 +152,86 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (shouldAutoScroll) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      setShouldAutoScroll(false); // Reset after scrolling
+    }
+  }, [messages, shouldAutoScroll]);
 
-  // Additional scroll during streaming for real-time updates
+  // Scroll to show AI response when it starts generating
   useEffect(() => {
     if (loading) {
-      const intervalId = setInterval(() => {
+      // Small delay to ensure the AI message placeholder is added to DOM
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [loading]); // Trigger when loading state changes
+
+  // Add this new useEffect to scroll to last message on page load
+  useEffect(() => {
+    if (messages.length > 0 && !loading) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       }, 100);
-      return () => clearInterval(intervalId);
     }
-  }, [loading]);
+  }, [messages.length]); // Only trigger when message count changes
 
   async function streamChat(
     messages: Message[],
-    onDelta: (delta: string) => void
+    onDelta: (delta: string) => void,
+    onError?: (error: Error) => void
   ) {
-    await fetchEventSource('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
-      onopen: async (res) => {
-         if (!res.ok) throw new Error('Failed to open stream');
-       },
-      onmessage: (ev) => {
-        // OpenAI streams lines like:
-        //   data: {"id":"...","choices":[{"delta":{"content":"Hello"},"index":0,"finish_reason":null}]}
-        //   data: [DONE]
-        if (ev.data === '[DONE]') return;
-        try {
-          const parsed = JSON.parse(ev.data);
-          const delta = parsed.choices[0].delta.content;
-          if (delta) onDelta(delta);
-        } catch (err) {
-
-          console.error('Stream parse error', err, ev.data);
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    const attemptStream = async (): Promise<void> => {
+      try {
+        await fetchEventSource('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages }),
+          onopen: async (res) => {
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+          },
+          onmessage: (ev) => {
+            if (ev.data === '[DONE]') return;
+            try {
+              const parsed = JSON.parse(ev.data);
+              const delta = parsed.choices[0].delta.content;
+              if (delta) onDelta(delta);
+            } catch (err) {
+              console.error('Stream parse error', err, ev.data);
+              // Don't throw here, just log and continue
+            }
+          },
+          onerror: (err) => {
+            console.error('Stream error', err);
+            if (retryCount < maxRetries) {
+              retryCount++;
+              console.log(`Retrying stream (${retryCount}/${maxRetries})...`);
+              setTimeout(() => attemptStream(), 1000 * retryCount);
+            } else {
+              onError?.(new Error('Stream failed after multiple retries'));
+            }
+            throw err;
+          },
+        });
+      } catch (error) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Retrying stream (${retryCount}/${maxRetries})...`);
+          setTimeout(() => attemptStream(), 1000 * retryCount);
+        } else {
+          throw error;
         }
-      },
-      onerror: (err) => {
-
-        console.error('Stream error', err);
-        throw err;
-      },
-    });
+      }
+    };
+    
+    return attemptStream();
   }
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -202,12 +241,14 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
     // 1️⃣ Insert user message locally & to Supabase
     const userMsg: Message = { user_id: userId, role: 'user', content: input };
     setMessages((m) => [...m, userMsg]);
+    setShouldAutoScroll(true); // Trigger scroll for user message
     await supabase.from('messages').insert(userMsg);
     setInput('');
     setLoading(true);
 
     // 2️⃣ Prepare assistant placeholder
     setMessages((m) => [...m, { user_id: userId, role: 'assistant', content: '' }]);
+    // Note: Don't set shouldAutoScroll here - we don't want to scroll for AI messages
 
     // 3️⃣ Stream from API
     let assistantContent = '';
@@ -408,4 +449,5 @@ export function Chat({ userId, userEmail }: { userId: string; userEmail: string 
       </div>
     </div>
   );
-}
+});
+
