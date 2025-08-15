@@ -7,13 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 
 export function sanitizeFilename(filename: string): string {
   // Replace special characters with their ASCII equivalents or remove them
-  let sanitized = filename
-    .normalize('NFD') // Normalize to NFD (Normalization Form Canonical Decomposition)
-    .replace(/\p{Diacritic}/gu, '') // Remove diacritics (accents)
-    .replace(/[^a-zA-Z0-9.\-_ ]/g, '') // Remove characters that are not alphanumeric, dot, hyphen, underscore, or space
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/--+/g, '-') // Replace multiple hyphens with a single hyphen
-    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+  const sanitized = filename
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s\-_\.]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
 
   // Ensure the filename is not empty after sanitization
   if (sanitized.length === 0) {
