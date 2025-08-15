@@ -1,6 +1,4 @@
-'use client';
-
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 
@@ -91,7 +89,7 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
   };
 
   // Send initial message function
-  const sendInitialMessage = async () => {
+  const sendInitialMessage = useCallback(async () => {
     const initialPrompt = "¿Me orientas en mi busqueda profesional? Primero cuentame como puedo empezar este ejercicio";
     
     try {
@@ -100,11 +98,11 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
       dispatch({ type: 'ADD_MESSAGE', payload: userMsg });
       await supabase.from('messages').insert(userMsg);
       dispatch({ type: 'SET_LOADING', payload: true });
-
+  
       // Prepare assistant placeholder
       const assistantMsg: Message = { user_id: userId, role: 'assistant', content: '' };
       dispatch({ type: 'ADD_MESSAGE', payload: assistantMsg });
-
+  
       // Stream from API
       let assistantContent = '';
       await streamChat([userMsg], (delta) => {
@@ -125,11 +123,11 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
       console.error(err);
       dispatch({ type: 'SET_ERROR', payload: 'Error: No se pudo establecer la conexión.' });
     }
-  };
+  },[]);
 
   // Single source of truth for message management
   useEffect(() => {
-    let subscription: any;
+    let subscription: any = null;
     
     const setupChat = async () => {
       try {
@@ -171,7 +169,7 @@ export function ChatProvider({ children, userId }: { children: React.ReactNode; 
         supabase.removeChannel(subscription);
       }
     };
-  }, [userId]);
+  }, [userId, sendInitialMessage]); // Add sendInitialMessage to dependencies
 
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
