@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
-import type { User } from '@supabase/supabase-js';
+import { useAuth } from '@/contexts/AuthContext';
 import { Menu, X, Users, Brain, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -17,54 +17,94 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onToggle }: SidebarProps) {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, signOut } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  
+  // Refs to prevent excessive API calls and flickering
+  const adminCheckTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const lastAdminCheckRef = useRef<string>(''); // Store user ID to prevent unnecessary checks
+  const adminStatusCacheRef = useRef<Map<string, boolean>>(new Map());
+
+  // Debounced admin status check to prevent flickering
+  const checkAdminStatus = useCallback(async (userId: string) => {
+    // Don't check if we've checked this user recently
+    if (lastAdminCheckRef.current === userId) {
+      return;
+    }
+
+    // Check cache first
+    if (adminStatusCacheRef.current.has(userId)) {
+      setIsAdmin(adminStatusCacheRef.current.get(userId)!);
+      lastAdminCheckRef.current = userId;
+      return;
+    }
+
+    setIsCheckingAdmin(true);
+    
+    try {
+      const { data: userProfile, error } = await supabase
+        .from('user_profiles')
+        .select('user_type')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+        adminStatusCacheRef.current.set(userId, false);
+      } else {
+        const adminStatus = userProfile?.user_type === 'admin';
+        console.log('Admin status updated:', { userId, adminStatus, userType: userProfile?.user_type });
+        setIsAdmin(adminStatus);
+        adminStatusCacheRef.current.set(userId, adminStatus);
+      }
+      
+      lastAdminCheckRef.current = userId;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+      adminStatusCacheRef.current.set(userId, false);
+      lastAdminCheckRef.current = userId;
+    } finally {
+      setIsCheckingAdmin(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      
-      // Check if user is admin
-      if (session?.user) {
-        const { data: userProfile } = await supabase
-          .from('user_profiles')
-          .select('user_type')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        setIsAdmin(userProfile?.user_type === 'admin');
+    // Clear any existing timeout
+    if (adminCheckTimeoutRef.current) {
+      clearTimeout(adminCheckTimeoutRef.current);
+    }
+
+    if (user?.id) {
+      // Debounce the admin check to prevent rapid calls
+      adminCheckTimeoutRef.current = setTimeout(() => {
+        checkAdminStatus(user.id);
+      }, 100); // 100ms debounce
+    } else {
+      // Clear admin status when no user
+      setIsAdmin(false);
+      lastAdminCheckRef.current = '';
+    }
+
+    return () => {
+      if (adminCheckTimeoutRef.current) {
+        clearTimeout(adminCheckTimeoutRef.current);
       }
     };
+  }, [user?.id, checkAdminStatus]);
 
-    getInitialSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        
-        // Check if user is admin when auth state changes
-        if (session?.user) {
-          const { data: userProfile } = await supabase
-            .from('user_profiles')
-            .select('user_type')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          setIsAdmin(userProfile?.user_type === 'admin');
-        } else {
-          setIsAdmin(false);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
+  // Clear admin status when user signs out
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      lastAdminCheckRef.current = '';
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     if (isSigningOut) return; // Prevent multiple clicks
@@ -73,36 +113,14 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
     toast.loading('Signing out...', { id: 'signout' });
     
     try {
-      // First attempt to sign out with Supabase
-      await supabase.auth.signOut();
-      
-      // Then clear all storage and state
-      localStorage.clear();
-      sessionStorage.clear();
-      setUser(null);
-      setIsAdmin(false);
-      
-      // Reset loading state before redirect
-      setIsSigningOut(false);
+      await signOut();
+      // AuthContext will handle the rest
       toast.success('Signed out successfully', { id: 'signout' });
-      
-      // Use router.push instead of window.location.href for better reliability
-      router.push('/login');
     } catch (error) {
       console.error('Sign out error:', error);
-      
-      // Fallback: clear storage and redirect anyway
-      localStorage.clear();
-      sessionStorage.clear();
-      setUser(null);
-      setIsAdmin(false);
-      
-      // Reset loading state before redirect
+      toast.error('Error signing out', { id: 'signout' });
+    } finally {
       setIsSigningOut(false);
-      toast.success('Signed out successfully', { id: 'signout' });
-      
-      // Use router.push instead of window.location.href
-      router.push('/login');
     }
   };
 
@@ -187,6 +205,17 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {user.email}
               </p>
+              {/* Show admin status indicator */}
+              {isCheckingAdmin && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Checking permissions...
+                </p>
+              )}
+              {!isCheckingAdmin && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {isAdmin ? 'Admin user' : 'Regular user'}
+                </p>
+              )}
             </div>
             <Button 
               onClick={handleSignOut}
