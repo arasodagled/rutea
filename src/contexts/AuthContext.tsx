@@ -10,6 +10,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isConnected: boolean;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -114,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user, 
       session, 
       loading, 
+      isConnected: !!session && !!session.access_token, 
       signOut, 
       refreshUser 
     }}>
