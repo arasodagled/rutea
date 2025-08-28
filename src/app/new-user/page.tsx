@@ -244,9 +244,9 @@ function NewUserContent() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">¡Bienvenido a Rutea!</CardTitle>
+          <CardTitle className="text-2xl font-bold">¡Te damos la Bienvenida a Rutea!</CardTitle>
           <CardDescription>
-            Configuremos tu perfil para comenzar tu viaje de autoconocimiento.
+          Antes de comenzar tu ejercicio de Autoconocimiento, sube tu CV y el enlace a tu perfil de LinkedIn. <b>No es necesario que estén perfectos</b>, compártelos tal como los tienes ahora.
           </CardDescription>
         </CardHeader>
         

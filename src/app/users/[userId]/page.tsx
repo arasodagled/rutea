@@ -313,7 +313,7 @@ export default function UserDetailPage() {
           <AutoconocimientoComponent userId={userId} />
         </TabsContent>
         
-        <TabsContent value="mapa-de-ruta" className="mt-6">
+        <TabsContent value="mapa-ruta" className="mt-6">
           <MapaDeRutaComponent userId={userId} />
         </TabsContent>
       </Tabs>
