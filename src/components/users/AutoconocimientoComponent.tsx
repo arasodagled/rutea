@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/lib/supabase';
-import { Brain, Target, Star, TrendingUp, Eye, RotateCcw, Calendar } from 'lucide-react';
+import { Brain, Target, Star, TrendingUp, Eye, RotateCcw, Calendar, Briefcase, ThumbsUp, ThumbsDown, Heart, DollarSign, Gift, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -20,6 +20,13 @@ interface Resumen {
   cambio_carrera: string;
   vision_1_ano: string | Record<string, unknown>; // Replace 'any' with a more specific type based on what this field actually contains
   impacto_ejercicio: string;
+  roles_industrias: string;
+  tareas_disfrutadas: string[];
+  tareas_no_disfrutadas: string[];
+  valores: string[];
+  rango_salarial: string;
+  beneficios: string[];
+  ambiente_laboral: string;
   created_at: string;
   updated_at: string;
 }
@@ -335,6 +342,145 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
         <CardContent>
           <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
             {resumen.impacto_ejercicio || 'No exercise impact described'}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Roles e Industrias */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5 text-blue-600" />
+            Roles e Industrias
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+            {resumen.roles_industrias || 'No roles or industries specified'}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Tareas que Disfruta y No Disfruta */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ThumbsUp className="h-5 w-5 text-green-600" />
+              Tareas que Disfruta
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {resumen.tareas_disfrutadas && resumen.tareas_disfrutadas.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {resumen.tareas_disfrutadas.map((tarea, index) => (
+                  <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                    {tarea}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">No se han especificado tareas</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ThumbsDown className="h-5 w-5 text-red-600" />
+              Tareas que No Disfruta
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {resumen.tareas_no_disfrutadas && resumen.tareas_no_disfrutadas.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {resumen.tareas_no_disfrutadas.map((tarea, index) => (
+                  <Badge key={index} variant="secondary" className="bg-red-100 text-red-800">
+                    {tarea}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">No se han especificado tareas</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Valores */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Heart className="h-5 w-5 text-purple-600" />
+            Valores
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {resumen.valores && resumen.valores.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {resumen.valores.map((valor, index) => (
+                <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">
+                  {valor}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400">No se han especificado valores</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Rango Salarial y Beneficios */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-emerald-600" />
+              Rango Salarial
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-700 dark:text-gray-300">
+              {resumen.rango_salarial || 'No se ha especificado rango salarial'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5 text-amber-600" />
+              Beneficios
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {resumen.beneficios && resumen.beneficios.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {resumen.beneficios.map((beneficio, index) => (
+                  <Badge key={index} variant="secondary" className="bg-amber-100 text-amber-800">
+                    {beneficio}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400">No se han especificado beneficios</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Ambiente Laboral */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-cyan-600" />
+            Ambiente Laboral
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+            {resumen.ambiente_laboral || 'No se ha especificado ambiente laboral'}
           </p>
         </CardContent>
       </Card>

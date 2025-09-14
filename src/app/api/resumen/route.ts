@@ -74,7 +74,15 @@ Responde en formato JSON con la siguiente estructura:
   "claridad_actual": "string",
   "cambio_carrera": "string",
   "vision_1_ano": "string",
-  "impacto_ejercicio": "string"
+  "impacto_ejercicio": "string",
+  "roles_industrias": "string",
+  "tareas_disfrutadas": ["string1", "string2", "string3"],
+  "tareas_no_disfrutadas": ["string1", "string2", "string3"],
+  "valores": ["string1", "string2", "string3"],
+  "rango_salarial": "string",
+  "beneficios": ["string1", "string2", "string3"],
+  "ambiente_laboral": "string",
+  "comentarios_adicionales": "string"
 }
 
 Si alguna información no está disponible en la conversación, usa "No especificado en la conversación" para ese campo.`;

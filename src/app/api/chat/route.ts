@@ -161,6 +161,9 @@ Presenta la información de forma visual y directo:
 💡 **Talentos Clave:**
 🔥 **Motivaciones:**
 🧠 **Experiencia Destacada:**
+📋 **Tareas que Disfrutas:**
+🚫 **Tareas que No Disfrutas:**
+💎 **Valores Importantes:**
 
 🔄 **Cambio de carrera:**
 
@@ -185,7 +188,7 @@ Cuando confirme identificación y efecto emocional, terminar con:
 
 > 🙏 «¡Gracias por tu tiempo!
 > 
-> 📋 Tu coach recibirá este ejercicio y lo revisará cuidadosamente. Muy pronto se pondrá en contacto contigo para agendar una sesión 1:1 donde revisarán juntas tu perfil y construirán tu estrategia personalizada de búsqueda de oportunidades profesionales.»`
+> 📋 Tu coach recibirá este ejercicio y lo revisará cuidadosamente. Muy pronto se pondrá en contacto contigo para agendar una sesión 1:1 donde revisarán juntos tu perfil y construirán tu estrategia personalizada de búsqueda de oportunidades profesionales.»`
   };
 
   // Kick off a streamed chat completion with system prompt
