@@ -27,6 +27,7 @@ interface Resumen {
   rango_salarial: string;
   beneficios: string[];
   ambiente_laboral: string;
+  comentarios_adicionales: string;
   created_at: string;
   updated_at: string;
 }
@@ -374,7 +375,11 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
             {resumen.tareas_disfrutadas && resumen.tareas_disfrutadas.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {resumen.tareas_disfrutadas.map((tarea, index) => (
-                  <Badge key={index} variant="secondary" className="bg-green-100 text-green-800">
+                  <Badge 
+                    key={index} 
+                    variant="secondary" 
+                    className="bg-green-100 text-green-800 break-words whitespace-normal max-w-full mb-1"
+                  >
                     {tarea}
                   </Badge>
                 ))}
@@ -396,7 +401,11 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
             {resumen.tareas_no_disfrutadas && resumen.tareas_no_disfrutadas.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {resumen.tareas_no_disfrutadas.map((tarea, index) => (
-                  <Badge key={index} variant="secondary" className="bg-red-100 text-red-800">
+                  <Badge 
+                    key={index} 
+                    variant="secondary" 
+                    className="bg-red-100 text-red-800 break-words whitespace-normal max-w-full mb-1"
+                  >
                     {tarea}
                   </Badge>
                 ))}
@@ -420,7 +429,11 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
           {resumen.valores && resumen.valores.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {resumen.valores.map((valor, index) => (
-                <Badge key={index} variant="secondary" className="bg-purple-100 text-purple-800">
+                <Badge 
+                  key={index} 
+                  variant="secondary" 
+                  className="bg-purple-100 text-purple-800 break-words whitespace-normal max-w-full mb-1"
+                >
                   {valor}
                 </Badge>
               ))}
@@ -441,7 +454,7 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-700 dark:text-gray-300">
+            <p className="text-gray-700 dark:text-gray-300 break-words whitespace-normal">
               {resumen.rango_salarial || 'No se ha especificado rango salarial'}
             </p>
           </CardContent>
@@ -458,7 +471,11 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
             {resumen.beneficios && resumen.beneficios.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {resumen.beneficios.map((beneficio, index) => (
-                  <Badge key={index} variant="secondary" className="bg-amber-100 text-amber-800">
+                  <Badge 
+                    key={index} 
+                    variant="secondary" 
+                    className="bg-amber-100 text-amber-800 break-words whitespace-normal max-w-full mb-1"
+                  >
                     {beneficio}
                   </Badge>
                 ))}
@@ -481,6 +498,21 @@ export function AutoconocimientoComponent({ userId }: AutoconocimientoComponentP
         <CardContent>
           <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
             {resumen.ambiente_laboral || 'No se ha especificado ambiente laboral'}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Comentarios Adicionales */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-cyan-600" />
+            Comentarios Adicionales
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed break-words whitespace-normal">
+            {resumen.comentarios_adicionales || 'No hay comentarios adicionales'}
           </p>
         </CardContent>
       </Card>
